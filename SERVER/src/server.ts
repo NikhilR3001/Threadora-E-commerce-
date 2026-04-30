@@ -6,6 +6,8 @@ import { errorHandler } from "./middleware/errorhandler";
 import { notFound } from "./middleware/notFound";
 import morgan from "morgan";
 import { ok } from "./utils/envelope";
+import { clerkMiddleware } from "@clerk/express";
+import { authRouter } from "./routes/auth.routes";
 
 async function mainEntryFunction() {
   await connectDB();
@@ -28,12 +30,17 @@ async function mainEntryFunction() {
 
   app.use(express.json());
   app.use(morgan("dev"));
-  app.use(errorHandler);
-  app.use(notFound);
+  app.use(clerkMiddleware());
 
   app.get("/health", (_req, res) => {
     res.status(200).json(ok({ message: "server up and running" }));
   });
+
+  app.use("/auth", authRouter);
+
+  app.use(errorHandler);
+  app.use(notFound);
+
   const port = Number(process.env.PORT || 5000);
   app.listen(port, () => {
     console.log(`Server is running at port ${port}`);
